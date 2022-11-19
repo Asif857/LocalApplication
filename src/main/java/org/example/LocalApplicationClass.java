@@ -31,9 +31,9 @@ public class LocalApplicationClass {
     final private String sqsToLocalApplicationURL = "https://sqs.us-east-1.amazonaws.com/712064767285/ManagerToLocalApplicationSQS.fifo";
 
     final private AmazonSQS sqsClient;
-    final private int workerRatio;
+    final private String workerRatio;
     final private AmazonS3 s3Client;
-    public LocalApplicationClass(String inputFilePath,String htmlOutputPath,int workerRatio, boolean terminate) throws GitAPIException, IOException {
+    public LocalApplicationClass(String inputFilePath,String htmlOutputPath,String workerRatio, boolean terminate) throws GitAPIException, IOException {
         this.terminate = terminate;
         this.inputFile = new File(inputFilePath);
         this.workerRatio = workerRatio;
@@ -49,8 +49,8 @@ public class LocalApplicationClass {
     public void startManager() {
         if (!checkIfManagerIsUp()) {
             RunInstancesRequest runRequest = new RunInstancesRequest()
-                    .withImageId("ami_id")
-                    .withInstanceType(InstanceType.T1Micro)
+                    .withImageId("ami-02ec6a6ea88f4a9a7")
+                    .withInstanceType(InstanceType.T2Micro)
                     .withMaxCount(1)
                     .withMinCount(1)
                     .withUserData((Base64.getEncoder().encodeToString("/*your USER DATA script string*/".getBytes())));
@@ -85,12 +85,16 @@ public class LocalApplicationClass {
         messageAttributes.put(id, new MessageAttributeValue()
                 .withStringValue(projectBucketToString + "/" + s3Path)
                 .withDataType("String"));
+        messageAttributes.put("Ratio", new MessageAttributeValue()
+                .withStringValue(workerRatio)
+                .withDataType("String")
+        );
         SendMessageRequest requestMessageSend = new SendMessageRequest()
                 .withQueueUrl(sqsToManagerURL)
                 .withMessageAttributes(messageAttributes)
                 .withMessageDeduplicationId(s3Path)
                 .withMessageGroupId(id)
-                .withMessageBody("");
+                .withMessageBody("Parameters");
         SendMessageResult result = sqsClient.sendMessage(requestMessageSend);
         System.out.println(result.getMessageId());
     }
@@ -102,10 +106,11 @@ public class LocalApplicationClass {
                     .withMaxNumberOfMessages(1)
                     .withMessageAttributeNames("All");
             List<Message> messages = sqsClient.receiveMessage(request).getMessages();
-           MessageAttributeValue messageURL = messages.get(0).getMessageAttributes().get(id);
+            Message message = messages.get(0);
+           MessageAttributeValue messageURL = message.getMessageAttributes().get(id); //{ID,URL} in messageAttributeValue hashmap.
             if (messageURL != null){
                 System.out.println(messages.get(0));
-                return messages.get(0);
+                return message;
             }
         }
     }
@@ -114,7 +119,7 @@ public class LocalApplicationClass {
         sqsClient.deleteMessage(sqsToLocalApplicationURL,message.getReceiptHandle());
     }
     public void createHtml(File outputFile) throws IOException {
-        BufferedWriter bw = new BufferedWriter(new FileWriter("/home/assiph/IdeaProjects/LocalApplication/src/main/java/Output/Output.html"));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(htmlOutputPath + "/Output.html"));
         String firstLine = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>OCR</title>\n";
         String secondLine = "</head><body>\n";
         bw.write(firstLine);
