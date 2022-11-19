@@ -89,7 +89,8 @@ public class LocalApplicationClass {
                 .withQueueUrl(sqsToManagerURL)
                 .withMessageAttributes(messageAttributes)
                 .withMessageDeduplicationId(s3Path)
-                .withMessageGroupId(id);
+                .withMessageGroupId(id)
+                .withMessageBody("");
         SendMessageResult result = sqsClient.sendMessage(requestMessageSend);
         System.out.println(result.getMessageId());
     }
@@ -167,5 +168,24 @@ public class LocalApplicationClass {
         File outputFile = new File (home + "/IdeaProjects/LocalApplication/src/main/java/Output/outputFile.txt");
         s3Client.getObject(new GetObjectRequest(projectBucketToString,outputPath),outputFile);
         return outputFile;
+    }
+
+    public boolean getTerminate() {
+        return this.terminate;
+    }
+
+    public void sendTerminate() {
+        Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("TERMINATE", new MessageAttributeValue()
+                .withStringValue("TERMINATE")
+                .withDataType("String"));
+        SendMessageRequest requestMessageSend = new SendMessageRequest()
+                .withQueueUrl(sqsToManagerURL)
+                .withMessageAttributes(messageAttributes)
+                .withMessageDeduplicationId(s3Path)
+                .withMessageGroupId(id)
+                .withMessageBody("TERMINATE");
+        SendMessageResult result = sqsClient.sendMessage(requestMessageSend);
+        System.out.println(result.getMessageId());
     }
 }
