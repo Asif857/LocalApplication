@@ -19,7 +19,6 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class LocalApplicationClass {
-    private String html; // NEED TO CHANGE TYPE!
     final private File inputFile;
     final private String htmlOutputPath;
     final private String s3Path;
@@ -33,18 +32,32 @@ public class LocalApplicationClass {
     final private AmazonSQS sqsClient;
     final private String workerRatio;
     final private AmazonS3 s3Client;
+    final private int workersToInit;
     public LocalApplicationClass(String inputFilePath,String htmlOutputPath,String workerRatio, boolean terminate) throws GitAPIException, IOException {
         this.terminate = terminate;
         this.inputFile = new File(inputFilePath);
         this.workerRatio = workerRatio;
         this.htmlOutputPath = htmlOutputPath;
-        this.id = "5"; //UUID.randomUUID().toString();
-        this.s3Path = "Input/" + id + "/" + "LinksFile";
+        this.id = UUID.randomUUID().toString();
+        this.s3Path = "Input/" + id;
         this.projectBucketToString = "amazon-first-project";
         setCredentials();
         ec2Client = AmazonEC2ClientBuilder.defaultClient();
         s3Client = AmazonS3ClientBuilder.defaultClient();
         sqsClient = AmazonSQSClientBuilder.defaultClient();
+        workersToInit = calculateWorkers(Integer.parseInt(workerRatio));
+    }
+    public int calculateWorkers(int ratio){
+        int lineNumbers = 0;
+        try(BufferedReader br = new BufferedReader(new FileReader(inputFile))) {
+            for(String line; (line = br.readLine()) != null; ) {
+                lineNumbers ++;
+            }
+            // line is not visible here.
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return lineNumbers/ratio;
     }
     public void startManager() {
         if (!checkIfManagerIsUp()) {
@@ -82,19 +95,24 @@ public class LocalApplicationClass {
     }
     public void putInLocalToManagerSQS(){
         Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-        messageAttributes.put(id, new MessageAttributeValue()
-                .withStringValue(projectBucketToString + "/" + s3Path)
+        messageAttributes.put("path", new MessageAttributeValue()
+                .withStringValue(s3Path)
                 .withDataType("String"));
-        messageAttributes.put("Ratio", new MessageAttributeValue()
-                .withStringValue(workerRatio)
-                .withDataType("String")
-        );
+        messageAttributes.put("workers", new MessageAttributeValue()
+                .withStringValue(String.valueOf(workersToInit))
+                .withDataType("String"));
+        messageAttributes.put("id", new MessageAttributeValue()
+                .withStringValue(id)
+                .withDataType("String"));
+        messageAttributes.put("bucket", new MessageAttributeValue()
+                .withStringValue(projectBucketToString)
+                .withDataType("String"));
         SendMessageRequest requestMessageSend = new SendMessageRequest()
                 .withQueueUrl(sqsToManagerURL)
                 .withMessageAttributes(messageAttributes)
                 .withMessageDeduplicationId(s3Path)
                 .withMessageGroupId(id)
-                .withMessageBody("Parameters");
+                .withMessageBody(id);
         SendMessageResult result = sqsClient.sendMessage(requestMessageSend);
         System.out.println(result.getMessageId());
     }
