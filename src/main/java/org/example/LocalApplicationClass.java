@@ -33,6 +33,7 @@ public class LocalApplicationClass {
     final private String workerRatio;
     final private AmazonS3 s3Client;
     final private int workersToInit;
+    private int lineNumbers;
     public LocalApplicationClass(String inputFilePath,String htmlOutputPath,String workerRatio, boolean terminate) throws GitAPIException, IOException {
         this.terminate = terminate;
         this.inputFile = new File(inputFilePath);
@@ -57,6 +58,7 @@ public class LocalApplicationClass {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        this.lineNumbers = lineNumbers;
         return lineNumbers/ratio;
     }
     public void startManager() {
@@ -107,6 +109,9 @@ public class LocalApplicationClass {
         messageAttributes.put("bucket", new MessageAttributeValue()
                 .withStringValue(projectBucketToString)
                 .withDataType("String"));
+        messageAttributes.put("lines", new MessageAttributeValue()
+                .withStringValue(String.valueOf(lineNumbers))
+                .withDataType("String"));
         SendMessageRequest requestMessageSend = new SendMessageRequest()
                 .withQueueUrl(sqsToManagerURL)
                 .withMessageAttributes(messageAttributes)
@@ -132,7 +137,6 @@ public class LocalApplicationClass {
             }
         }
     }
-
     public void deleteMessage(Message message){
         sqsClient.deleteMessage(sqsToLocalApplicationURL,message.getReceiptHandle());
     }
