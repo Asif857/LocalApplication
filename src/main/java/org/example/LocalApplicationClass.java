@@ -12,8 +12,6 @@ import net.lingala.zip4j.ZipFile;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.apache.commons.io.FileUtils;
-
-import javax.swing.text.html.HTML;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
@@ -66,7 +64,7 @@ public class LocalApplicationClass {
                     .withInstanceType(InstanceType.T2Micro)
                     .withMaxCount(1)
                     .withMinCount(1)
-                    .withUserData((Base64.getEncoder().encodeToString("/*your USER DATA script string*/".getBytes())));
+                    .withUserData((Base64.getEncoder().encodeToString("java -jar Manager.jar".getBytes())));
             Reservation managerReservation = new Reservation();
             managerReservation.setRequesterId("manager");
             ec2Client.runInstances(runRequest).withReservation(managerReservation);
