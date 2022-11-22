@@ -1,16 +1,16 @@
 package org.example;
-
 import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import org.eclipse.jgit.api.errors.GitAPIException;
-
 import java.io.File;
 import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws GitAPIException, IOException {
-        LocalApplicationClass localApplication = new LocalApplicationClass(args[1],args[2],args[3],Boolean.parseBoolean(args[4])); //inputPath,outputPath,RatiotoCreateWorkers,Terminate.
-        //LocalApplicationClass localApplication = new LocalApplicationClass("/home/assiph/Desktop/key/input-example.txt","args[2]","4",true); //delete in the future - was part of tests.
+        String inputPath = args[1];
+        String outputPath = args[2];
+        String ratioToCreateWorkers = args[3];
+        Boolean terminate = Boolean.parseBoolean(args[4]);
+        LocalApplicationClass localApplication = new LocalApplicationClass(inputPath,outputPath,ratioToCreateWorkers,terminate);
         localApplication.uploadFileToS3();
         localApplication.putInLocalToManagerSQS();
         localApplication.startManager();
