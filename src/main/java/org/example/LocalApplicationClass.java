@@ -151,11 +151,13 @@ public class LocalApplicationClass {
                     .withMaxNumberOfMessages(1)
                     .withMessageAttributeNames("All");
             List<Message> messages = sqsClient.receiveMessage(request).getMessages();
-            Message message = messages.get(0);
-           MessageAttributeValue messageURL = message.getMessageAttributes().get(id);//{ID,URL} in messageAttributeValue hashmap.
-            if (messageURL != null){
-                System.out.println(messages.get(0));
-                return message;
+            if (messages.size() > 0) {
+                Message message = messages.get(0);
+                MessageAttributeValue messageURL = message.getMessageAttributes().get(id);//{ID,URL} in messageAttributeValue hashmap.
+                if (messageURL != null) {
+                    System.out.println(messages.get(0));
+                    return message;
+                }
             }
         }
     }
