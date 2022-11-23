@@ -78,7 +78,7 @@ public class LocalApplicationClass {
         lines.add("echo Deleted Manager.jar");
         lines.add("wget -O Manager.jar https://github.com/nirmid/Manager/blob/master/out/artifacts/Manager_jar/Manager.jar?raw=true");
         lines.add("echo Downloading Manager.jar");
-        lines.add("zip -d Worker.jar 'META-INF/.SF' 'META-INF/.RSA' 'META-INF/*SF'");
+        lines.add("zip -d Manager.jar 'META-INF/.SF' 'META-INF/.RSA' 'META-INF/*SF'");
         lines.add("echo Deleting Security Issues");
         lines.add("java -jar Manager.jar");
         lines.add("echo Running Manager.jar");
