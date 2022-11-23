@@ -26,7 +26,7 @@ public class LocalApplicationClass {
     final private AmazonEC2 ec2Client;
     final private String sqsToManagerURL = "https://sqs.us-east-1.amazonaws.com/712064767285/LocalApplicationToManagerS3URLToDataSQS.fifo";
     final private String sqsToLocalApplicationURL = "https://sqs.us-east-1.amazonaws.com/712064767285/ManagerToLocalApplicationSQS.fifo";
-    final private String managerAMIID = "ami-07e32a7980602ae38";
+    final private String managerAMIID = "ami-0fce5e44348f5a184";
     final private AmazonSQS sqsClient;
     final private String workerRatio;
     final private AmazonS3 s3Client;
