@@ -26,7 +26,7 @@ public class LocalApplicationClass {
     final private AmazonEC2 ec2Client;
     final private String sqsToManagerURL = "https://sqs.us-east-1.amazonaws.com/712064767285/LocalApplicationToManagerS3URLToDataSQS.fifo";
     final private String sqsToLocalApplicationURL = "https://sqs.us-east-1.amazonaws.com/712064767285/ManagerToLocalApplicationSQS.fifo";
-
+    final private String managerAMIID = "ami-07e32a7980602ae38";
     final private AmazonSQS sqsClient;
     final private String workerRatio;
     final private AmazonS3 s3Client;
@@ -60,15 +60,44 @@ public class LocalApplicationClass {
     public void startManager() {
         if (!checkIfManagerIsUp()) {
             RunInstancesRequest runRequest = new RunInstancesRequest()
-                    .withImageId("ami-02ec6a6ea88f4a9a7")
+                    .withImageId(managerAMIID)
                     .withInstanceType(InstanceType.T2Micro)
                     .withMaxCount(1)
                     .withMinCount(1)
-                    .withUserData((Base64.getEncoder().encodeToString("java -jar Manager.jar".getBytes())));
+                    .withUserData((Base64.getEncoder().encodeToString((getUserDataScript()).getBytes())))
+                    .withMonitoring(true);
             Reservation managerReservation = new Reservation();
             managerReservation.setRequesterId("manager");
             ec2Client.runInstances(runRequest).withReservation(managerReservation);
         }
+    }
+    private String getUserDataScript(){
+        ArrayList<String> lines = new ArrayList<String>();
+        lines.add("#!/bin/bash");
+        lines.add("rm Manager.jar");
+        lines.add("echo Deleted Manager.jar");
+        lines.add("wget -O Manager.jar https://github.com/nirmid/Manager/blob/master/out/artifacts/Manager_jar/Manager.jar?raw=true");
+        lines.add("echo Downloading Manager.jar");
+        lines.add("java -jar Manager.jar");
+        lines.add("echo Running Manager.jar");
+        String temp = (join(lines, "\n"));
+        System.out.println(temp);
+        String str = Base64.getEncoder().encodeToString((join(lines, "\n").getBytes()));
+        System.out.println(str);
+        return str;
+    }
+
+    private static String join(Collection<String> s, String delimiter) {
+        StringBuilder builder = new StringBuilder();
+        Iterator<String> iter = s.iterator();
+        while (iter.hasNext()) {
+            builder.append(iter.next());
+            if (!iter.hasNext()) {
+                break;
+            }
+            builder.append(delimiter);
+        }
+        return builder.toString();
     }
     public boolean checkIfManagerIsUp(){
         DescribeInstancesRequest request = new DescribeInstancesRequest();
@@ -77,7 +106,7 @@ public class LocalApplicationClass {
         while (!done) {
             List<Reservation> reserveList = response.getReservations();
             for (Reservation reservation : reserveList) {
-                if (reservation.getRequesterId().equals("manager")) {
+                if (reservation.getReservationId().equals("manager")) {
                     return true;
                 }
             }
@@ -123,7 +152,7 @@ public class LocalApplicationClass {
                     .withMessageAttributeNames("All");
             List<Message> messages = sqsClient.receiveMessage(request).getMessages();
             Message message = messages.get(0);
-           String messageURL = message.getMessageAttributes().get(id).getStringValue(); //{ID,URL} in messageAttributeValue hashmap.
+           MessageAttributeValue messageURL = message.getMessageAttributes().get(id);//{ID,URL} in messageAttributeValue hashmap.
             if (messageURL != null){
                 System.out.println(messages.get(0));
                 return message;
@@ -174,7 +203,8 @@ public class LocalApplicationClass {
         zipFile.extractAll(destDir);
     }
     private void deleteDirectory() throws IOException {
-        FileUtils.deleteDirectory(new File("/home/assiph/IdeaProjects/LocalApplication/src/main/creds"));
+        String home = System.getProperty("user.home");
+        FileUtils.deleteDirectory(new File(home +"/IdeaProjects/LocalApplication/src/main/creds"));
     }
 
     public String getId(){

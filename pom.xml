@@ -24,11 +24,7 @@
             <artifactId>aws-java-sdk-ec2</artifactId>
             <version>1.12.342</version>
         </dependency>
-        <dependency>
-            <groupId>clj-jgit</groupId>
-            <artifactId>clj-jgit</artifactId>
-            <version>1.0.2</version>
-        </dependency>
+
         <dependency>
             <groupId>name.finsterwalder</groupId>
             <artifactId>fileutils</artifactId>
@@ -59,7 +55,11 @@
             <artifactId>aws-java-sdk-sqs</artifactId>
             <version>1.12.342</version>
         </dependency>
-
+        <dependency>
+            <groupId>clj-jgit</groupId>
+            <artifactId>clj-jgit</artifactId>
+            <version>1.0.2</version>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>

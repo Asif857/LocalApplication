@@ -6,10 +6,10 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws GitAPIException, IOException {
-        String inputPath = args[1];
-        String outputPath = args[2];
-        String ratioToCreateWorkers = args[3];
-        Boolean terminate = Boolean.parseBoolean(args[4]);
+        String inputPath = args[0];
+        String outputPath = args[1];
+        String ratioToCreateWorkers = args[2];
+        Boolean terminate = Boolean.parseBoolean(args[3]);
         LocalApplicationClass localApplication = new LocalApplicationClass(inputPath,outputPath,ratioToCreateWorkers,terminate);
         localApplication.uploadFileToS3();
         localApplication.putInLocalToManagerSQS();
