@@ -61,7 +61,7 @@ public class LocalApplicationClass {
         if (!checkIfManagerIsUp()) {
             RunInstancesRequest runRequest = new RunInstancesRequest()
                     .withImageId(managerAMIID)
-                    .withInstanceType(InstanceType.T2Medium)
+                    .withInstanceType(InstanceType.T2Micro)
                     .withMaxCount(1)
                     .withMinCount(1)
                     .withUserData((Base64.getEncoder().encodeToString((getUserDataScript()).getBytes())))
