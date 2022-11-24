@@ -65,6 +65,7 @@ public class LocalApplicationClass {
                     .withMaxCount(1)
                     .withMinCount(1)
                     .withUserData((Base64.getEncoder().encodeToString((getUserDataScript()).getBytes())))
+                    .withKeyName("keyForAMI")
                     .withMonitoring(true);
             Reservation managerReservation = new Reservation();
             managerReservation.setRequesterId("manager");
@@ -76,12 +77,12 @@ public class LocalApplicationClass {
         lines.add("#!/bin/bash");
         lines.add("rm Manager.jar");
         lines.add("echo Deleted Manager.jar");
-        lines.add("wget -O Manager.jar https://github.com/nirmid/Manager/blob/master/out/artifacts/Manager_jar/Manager.jar?raw=true");
+        lines.add("curl -L https://github.com/nirmid/Manager/blob/master/out/artifacts/Manager_jar/Manager.jar?raw=true -o Manager.jar");
         lines.add("echo Downloading Manager.jar");
         lines.add("zip -d Manager.jar 'META-INF/.SF' 'META-INF/.RSA' 'META-INF/*SF'");
         lines.add("echo Deleting Security Issues");
-      //  lines.add("java -jar Manager.jar");
-       // lines.add("echo Running Manager.jar");
+        lines.add("java -jar Manager.jar");
+        lines.add("echo Running Manager.jar");
         String temp = (join(lines, "\n"));
         System.out.println(temp);
         String str = Base64.getEncoder().encodeToString((join(lines, "\n").getBytes()));
