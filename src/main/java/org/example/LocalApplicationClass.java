@@ -80,8 +80,8 @@ public class LocalApplicationClass {
         lines.add("echo Downloading Manager.jar");
         lines.add("zip -d Manager.jar 'META-INF/.SF' 'META-INF/.RSA' 'META-INF/*SF'");
         lines.add("echo Deleting Security Issues");
-        lines.add("java -jar Manager.jar");
-        lines.add("echo Running Manager.jar");
+      //  lines.add("java -jar Manager.jar");
+       // lines.add("echo Running Manager.jar");
         String temp = (join(lines, "\n"));
         System.out.println(temp);
         String str = Base64.getEncoder().encodeToString((join(lines, "\n").getBytes()));
