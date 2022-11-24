@@ -59,11 +59,17 @@ public class LocalApplicationClass {
     }
     public void startManager() {
         if (!checkIfManagerIsUp()) {
+            Tag tag = new Tag("manager","manager");
+            List<Tag> tags = new ArrayList<>();
+            tags.add(tag);
+            List<TagSpecification> tagSpecificationsList = new ArrayList<>();
+            tagSpecificationsList.add(new TagSpecification().withTags(tags).withResourceType(ResourceType.Instance));
             RunInstancesRequest runRequest = new RunInstancesRequest()
                     .withImageId(managerAMIID)
                     .withInstanceType(InstanceType.T2Micro)
                     .withMaxCount(1)
                     .withMinCount(1)
+                    .withTagSpecifications(tagSpecificationsList)
                     .withUserData((Base64.getEncoder().encodeToString((getUserDataScript()).getBytes())))
                     .withKeyName("keyForAMI")
                     .withMonitoring(true);
@@ -109,8 +115,11 @@ public class LocalApplicationClass {
         while (!done) {
             List<Reservation> reserveList = response.getReservations();
             for (Reservation reservation : reserveList) {
-                if (reservation.getReservationId().equals("manager")) {
-                    return true;
+                for (Instance instance : reservation.getInstances()) {
+                    if ((instance.getState().getName().equals("Running") || instance.getState().getName().equals("Pending")) && instance.getTags().get(0).getValue().equals("manager")) {
+                        System.out.println(instance.getState().getName());
+                        return true;
+                    }
                 }
             }
             request.setNextToken(response.getNextToken());
