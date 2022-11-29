@@ -89,10 +89,7 @@ public class LocalApplicationClass {
         lines.add("echo Deleting Security Issues");
         lines.add("java -jar Manager.jar");
         lines.add("echo Running Manager.jar");
-        String temp = (join(lines, "\n"));
-        System.out.println(temp);
         String str = Base64.getEncoder().encodeToString((join(lines, "\n").getBytes()));
-        System.out.println(str);
         return str;
     }
 
@@ -116,8 +113,8 @@ public class LocalApplicationClass {
             List<Reservation> reserveList = response.getReservations();
             for (Reservation reservation : reserveList) {
                 for (Instance instance : reservation.getInstances()) {
-                    if ((instance.getState().getName().equals("Running") || instance.getState().getName().equals("Pending")) && instance.getTags().get(0).getValue().equals("manager")) {
-                        System.out.println(instance.getState().getName());
+                    if ((instance.getState().getName().equals("pending") ||instance.getState().getName().equals("running") || instance.getState().getName().equals("pending")) && instance.getTags().get(0).getValue().equals("manager")) {
+                        System.out.println("Found manager!");
                         return true;
                     }
                 }
@@ -132,7 +129,7 @@ public class LocalApplicationClass {
     public void uploadFileToS3(){
         s3Client.putObject(projectBucketToString,s3Path,inputFile);
     }
-    public void putInLocalToManagerSQS(){
+    public void sendLocalToManagerSQS(){
         Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
         messageAttributes.put("path", new MessageAttributeValue()
                 .withStringValue(s3Path)
@@ -153,7 +150,6 @@ public class LocalApplicationClass {
                 .withMessageGroupId(id)
                 .withMessageBody(id);
         SendMessageResult result = sqsClient.sendMessage(requestMessageSend);
-        System.out.println(result.getMessageId());
     }
 
     public Message awaitMessageFromManagerToLocalApplicationSQS() {
@@ -165,9 +161,9 @@ public class LocalApplicationClass {
             List<Message> messages = sqsClient.receiveMessage(request).getMessages();
             if (messages.size() > 0) {
                 Message message = messages.get(0);
+
                 MessageAttributeValue messageURL = message.getMessageAttributes().get(id);//{ID,URL} in messageAttributeValue hashmap.
                 if (messageURL != null) {
-                    System.out.println(messages.get(0));
                     return message;
                 }
             }
@@ -177,7 +173,7 @@ public class LocalApplicationClass {
         sqsClient.deleteMessage(sqsToLocalApplicationURL,message.getReceiptHandle());
     }
     public void createHtml(File outputFile) throws IOException {
-        BufferedWriter bw = new BufferedWriter(new FileWriter(htmlOutputPath + "/Output.html"));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(htmlOutputPath));
         String firstLine = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>OCR</title>\n";
         String secondLine = "</head><body>\n";
         bw.write(firstLine);
@@ -226,8 +222,8 @@ public class LocalApplicationClass {
     }
 
     public File getFileFromS3(String messageS3Path) {
-        String outputPath = "Output/" + messageS3Path;
-        System.out.println(outputPath);
+        String outputPath = messageS3Path;
+        System.out.println("outputpath in s3: "+outputPath);
         String home = System.getProperty("user.home");
         File outputFile = new File (home + "/IdeaProjects/LocalApplication/src/main/java/Output/outputFile.txt");
         s3Client.getObject(new GetObjectRequest(projectBucketToString,outputPath),outputFile);
@@ -246,10 +242,9 @@ public class LocalApplicationClass {
         SendMessageRequest requestMessageSend = new SendMessageRequest()
                 .withQueueUrl(sqsToManagerURL)
                 .withMessageAttributes(messageAttributes)
-                .withMessageDeduplicationId(s3Path)
-                .withMessageGroupId(id)
+                .withMessageDeduplicationId("TERMINATE")
+                .withMessageGroupId("TERMINATE")
                 .withMessageBody("TERMINATE");
         SendMessageResult result = sqsClient.sendMessage(requestMessageSend);
-        System.out.println(result.getMessageId());
     }
 }

@@ -10,16 +10,21 @@ public class Main {
         String outputPath = args[1];
         String ratioToCreateWorkers = args[2];
         Boolean terminate = Boolean.parseBoolean(args[3]);
+        System.out.println("terminate status: "+ terminate);
         LocalApplicationClass localApplication = new LocalApplicationClass(inputPath,outputPath,ratioToCreateWorkers,terminate);
         localApplication.uploadFileToS3();
-        localApplication.putInLocalToManagerSQS();
+        localApplication.sendLocalToManagerSQS();
         localApplication.startManager();
         Message message = localApplication.awaitMessageFromManagerToLocalApplicationSQS();
         String messageS3Path = message.getMessageAttributes().get(localApplication.getId()).getStringValue();
         File outputFile = localApplication.getFileFromS3(messageS3Path);
+        System.out.println("got file & messgae from manager");
         localApplication.deleteMessage(message);
+        System.out.println("deleted message from manager");
         localApplication.createHtml(outputFile);
+        System.out.println("created html");
         if (localApplication.getTerminate()){
+            System.out.println("reached terminate");
             localApplication.sendTerminate();
         }
     }
